@@ -1,0 +1,67 @@
+Uri: https://adenginetechfusion.vercel.app/ico.ico
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\ico-2.ico
+Content Type: image/vnd.microsoft.icon
+
+Uri: https://adenginetechfusion.vercel.app/img/Mate.mp4
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\Mate.mp4
+Content Type: video/mp4
+
+Uri: https://adenginetechfusion.vercel.app/nevombre
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\nevombre
+Content Type: text/html
+
+g
+Content Type: image/png
+
+Uri: https://adenginetechfusion.vercel.app/img/block_2.png
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\block_2.png
+Content Type: image/png
+
+Uri: https://adenginetechfusion.vercel.app/img/dilution.jpg
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\dilution.jpg
+Content Type: image/jpeg
+
+Uri: https://adenginetechfusion.vercel.app/img/dir.png
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\dir.png
+Content Type: image/png
+
+Uri: https://adenginetechfusion.vercel.app/img/doc.png
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\doc.png
+Content Type: image/png
+
+Uri: https://adenginetechfusion.vercel.app/img/fb_round_logo.png
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\fb_round_logo.png
+Content Type: image/png
+
+Uri: https://adenginetechfusion.vercel.app/img/meta-logo-grey.png
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\meta-logo-grey.png
+Content Type: image/png
+
+Uri: https://adenginetechfusion.vercel.app/img/no_avatar.png
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\no_avatar.png
+Content Type: image/png
+
+Uri: https://adenginetechfusion.vercel.app/img/phone.png
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\phone.png
+Content Type: image/png
+
+Uri: https://adenginetechfusion.vercel.app/img/save_img.png
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\save_img.png
+Content Type: image/png
+
+Uri: https://adenginetechfusion.vercel.app/img/star.png
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\img\star.png
+Content Type: image/png
+
+Uri: https://adenginetechfusion.vercel.app/styles/bootstrap.min.css
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\styles\bootstrap.min.css
+Content Type: text/css
+
+Uri: https://adenginetechfusion.vercel.app/styles/style.css
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\styles\style.css
+Content Type: text/css
+
+Uri: https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js
+File Name: C:\Downloaded Web Sites\adenginetechfusion.vercel.app\ajax\libs\jquery\3.7.1\jquery.min.js
+Content Type: text/javascript
+

